@@ -12,6 +12,8 @@
                 background: #eee;
                 display: block;
                 margin: 0 auto;
+                width: 100%;
+                height: 100%;
             }
         </style>
     </head>
@@ -65,7 +67,7 @@
             }
 
             class Piece{
-                static r = 8
+                static r = 24
                 constructor(c){
                     this.color_ = c
                 }
@@ -78,7 +80,7 @@
             function createClassic(width, height){
                 var slots = []
                 //let path = Array(4).fill([4, "R", 2, "R", 4, "L"]).flat()
-                let path = "eeeeReRNNNNNRR----eR-NN!-!-R!-R!-NNeLLReeeL"
+                let path = "eeeeReRNNNNNRR----NR-NN!-!-R!-R!-NNeLLReeeL"
 
                 // https://stackoverflow.com/questions/22015684/how-do-i-zip-two-arrays-in-javascript
                 const zip = (a, b) => a.map((k, i)=>[k, b[i]])
@@ -216,6 +218,10 @@
 
             const canvas = document.getElementById("gameCanvas");
             const ctx = canvas.getContext("2d");
+
+            ctx.canvas.width  = window.innerWidth;
+            ctx.canvas.height = window.innerHeight;
+            Piece.r = Math.min(canvas.height, canvas.width) / 45
 
             //let slots = createSlots(canvas.width, canvas.height)
             let slots = createClassic(canvas.width, canvas.height)
