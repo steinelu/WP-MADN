@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Mensch ärger dich nicht</title>
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+            canvas {
+                background: #eee;
+                display: block;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="gameCanvas" width="480" height="320"></canvas>
+        <script>
+            
+            const colors = {
+                // (piecefill, boarder, emptyfill)
+                blue: ["#0052cc", "#003380", "#99c2ff"],
+                red: ["#b30000", "#800000", "#ff9999"],
+                green: ["#00e64d", "#00802b", "#80ffaa"],
+                black: ["#595959", "#404040", "#cccccc"],
+                none: ["", "#1a1a1a", "#e6e6e6"]
+            }
+
+            class Slot{
+                constructor(x, y, c){
+                    this.position = [x, y]
+                    this.piece_ = null
+                    this.color_ = c
+                }
+
+                get color(){4
+                    return this.color_
+                }
+
+                set color(c){
+                    this.color_ = c    
+                }
+
+                get pos (){
+                    return this.position
+                }
+
+                get hasPiece(){
+                    return this.piece_ != null
+                }
+
+                get piece(){
+                    return this.piece_
+                }
+
+                set piece(piece){
+                    this.piece_ = piece
+                }
+
+                empty(){
+                    this.piece_ = null
+                }
+            }
+
+            class Piece{
+                static r = 8
+                constructor(c){
+                    this.color_ = c
+                }
+
+                get color(){
+                    return this.color_
+                }
+            }
+
+            function createClassic(width, height){
+                var slots = []
+                //let path = Array(4).fill([4, "R", 2, "R", 4, "L"]).flat()
+                let path = "eeeeReRNNNNNRR----eR-NN!-!-R!-R!-NNeLLReeeL"
+
+                // https://stackoverflow.com/questions/22015684/how-do-i-zip-two-arrays-in-javascript
+                const zip = (a, b) => a.map((k, i)=>[k, b[i]])
+
+                let cpath = Array(4).fill(path)
+                let colors_path = "brga".split("")
+
+                //let npath = zip(cpath, colors_path).map((z)=>z[0].replace("_", z[1]))
+                let npath = zip(cpath, colors_path).map((z)=>z[0].replaceAll('-', z[1])).join('')
+
+                console.log(npath)
+                let stepsize = 3 * Piece.r
+
+                let x = width / 2
+                let y = height / 2
+
+                let dx = 1
+                let dy = 0
+
+                let current_color = colors.none
+
+                let pop = false
+
+                for (let cmd of npath){
+                    switch(cmd){
+                        case "R": // turn right
+                            [dx, dy] = [-dy, dx]
+                            break
+                        case "L": // turn left
+                            
+                            [dx, dy] = [dy, -dx]
+                            break
+                        case "!":
+                            pop = true
+                            break
+                        default:
+                            x += dx * stepsize
+                            y += dy * stepsize
+                            switch(cmd){
+                                case "e":
+                                current_color = colors.none
+                                break
+                            case "b": // blue
+                                current_color = colors.blue
+                                break
+                            case "g": // green
+                                current_color = colors.green
+                                break
+                            case "a": // black
+                                current_color = colors.black
+                                break
+                            case "r": // red
+                                current_color = colors.red
+                                break
+                            case "N":
+                                continue
+                            }
+                            let slot = new Slot(x, y, current_color)
+                            slots.push(slot)
+
+                            if (pop){
+                                slot.piece = new Piece(current_color)
+                                pop = false
+                            }
+                        
+                    }
+                    
+                }
+                return slots
+            }
+
+            function createSlots(width, height){
+                let n = 32
+                let radius = 70.0
+                var slots = []
+                
+                for (let i = 0; i < n; i++){
+                    let rho = 2 * Math.PI * i / n
+                    let x = radius * Math.sin(rho) + width / 2
+                    let y = radius * Math.cos(rho) + height / 2
+                    //slots.push([x, y, null])
+                    slots.push(new Slot(x, y, colors.none))
+                }
+
+                n=16
+                radius = 100.0
+                
+                for (let i = 0; i < n; i++) {
+                    let rho = 2 * Math.PI * i / n
+                    let x = radius * Math.sin(rho) + width / 2
+                    let y = radius * Math.cos(rho) + height / 2
+                    //slots.push([x, y, null])
+                    slots.push(new Slot(x, y, colors[Object.keys(colors)[i%4]]))
+                }
+                return slots
+            }
+
+            function drawSlots(ctx, slots){
+                //for (let [x, y, piece] of slots){
+                for (let slot of slots){
+                    var [x, y] = slot.pos
+                    ctx.beginPath()
+
+                    if(slot.hasPiece){
+                        ctx.fillStyle = slot.piece.color[0]
+                    } else {
+                        ctx.fillStyle = slot.color[2]
+                    }
+
+                    ctx.strokeStyle = slot.color[1]
+
+                    ctx.arc(x, y, Piece.r, 0, Math.PI * 2)
+                    ctx.lineWidth = 5
+
+                    ctx.stroke()
+                    ctx.fill()
+                    ctx.closePath()
+                }
+            }
+
+            function intersects(pos0, pos1, radius){
+                let [x, y] = pos0
+                let [x_, y_] = pos1
+                return Math.sqrt(((x_-x)**2 + (y_-y)**2)) <= radius
+            }
+
+            function findSlot(slots, pos){
+                for(let slot of slots){
+                    if (intersects(slot.pos, pos, Piece.r)){
+                        return slot
+                    }
+                }
+                return null
+            }
+
+            const canvas = document.getElementById("gameCanvas");
+            const ctx = canvas.getContext("2d");
+
+            //let slots = createSlots(canvas.width, canvas.height)
+            let slots = createClassic(canvas.width, canvas.height)
+            var current = null
+
+            var dr = null
+
+            function mousePosition(e){
+                // https://stackoverflow.com/questions/43853119/javascript-wrong-mouse-position-when-drawing-on-canvas
+                let bounds = canvas.getBoundingClientRect()
+                let x = e.pageX - bounds.left - scrollX
+                let y = e.pageY - bounds.top - scrollY
+                return [x, y]
+            }
+
+            document.addEventListener("mousedown", (e)=>{
+                var slot = findSlot(slots, mousePosition(e))
+                console.log("down", slot)
+
+                if (slot && slot.hasPiece){
+                    current = slot
+                } /*else if (slot && e.button == 1){ // for debugging
+                    slot.piece = new Piece(colors.red)
+                }  */
+                dr = mousePosition(e)
+            })
+
+            document.addEventListener("mouseup", (e)=>{
+                if (current != null){
+                    var new_slot = findSlot(slots, mousePosition(e))
+                    console.log("up", new_slot)
+
+                    if (new_slot && !(new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
+                        new_slot.piece = current.piece
+                        current.empty()
+                    }
+                }
+                current = null
+                dr = null
+            })
+            
+            document.addEventListener("mousemove", (e)=>{
+                if (dr != null){
+                    dr = mousePosition(e)
+                }
+            })
+
+
+            function draw(){
+                ctx.clearRect(0,0, canvas.width, canvas.height)
+                drawSlots(ctx, slots)
+
+                if(dr){
+                    ctx.beginPath()
+                    ctx.strokeStyle= "#999999"
+                    ctx.arc(dr[0], dr[1], 10, 0, Math.PI * 2)
+                    ctx.lineWidth = 1
+                    ctx.stroke()
+                    ctx.closePath()
+                }
+                if (current){
+                    ctx.beginPath()
+                    ctx.fillStyle = current.piece.color[2]
+                    ctx.strokeStyle = current.piece.color[1]
+                    ctx.arc(dr[0], dr[1], Piece.r, 0, Math.PI * 2)
+                    ctx.fill()
+                    ctx.lineWidth = 3
+                    ctx.stroke()
+                    ctx.closePath()
+                }
+                
+                requestAnimationFrame(draw)
+            }
+            draw();
+        </script>
+    </body>
+</html>
