@@ -70,6 +70,7 @@
                 static r = 24
                 constructor(c){
                     this.color_ = c
+                    this.home = null
                 }
 
                 get color(){
@@ -91,7 +92,6 @@
                 //let npath = zip(cpath, colors_path).map((z)=>z[0].replace("_", z[1]))
                 let npath = zip(cpath, colors_path).map((z)=>z[0].replaceAll('-', z[1])).join('')
 
-                console.log(npath)
                 let stepsize = 3 * Piece.r
 
                 let x = width / 2 + xoff
@@ -144,10 +144,9 @@
                             if (pop){
                                 slot.piece = new Piece(current_color)
                                 pop = false
+                                slot.piece.home = slot
                             }
-                        
                     }
-                    
                 }
                 return slots
             }
@@ -257,6 +256,34 @@
                     if (new_slot && !(new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
                         new_slot.piece = current.piece
                         current.empty()
+                    } else if (new_slot && (new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
+                        
+                        if (new_slot.piece.color == current.piece.color){
+                            // do nothing
+                        } else { 
+                            function swap (cslot, hslot){
+                                if (!hslot.hasPiece){
+                                    return
+                                }
+
+                                let p = hslot.piece
+                                hslot.piece = cslot.piece
+                                cslot.piece = null
+
+                                
+
+                                if (!p.home.hasPiece){
+                                    p.home.piece = p
+                                    return
+                                }
+
+                                swap(p.home, p.home.piece.home)
+                            }
+                            swap(current, new_slot)
+
+                            //new_slot.piece = current.piece
+                            //current.empty()
+                        }
                     }
                 }
                 current = null
