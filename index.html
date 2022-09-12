@@ -18,7 +18,7 @@
         </style>
     </head>
     <body>
-        <canvas id="gameCanvas" width="480" height="320"></canvas>
+        <canvas id="gameCanvas"></canvas>
         <script>
             
             const colors = {
@@ -77,7 +77,7 @@
                 }
             }
 
-            function createClassic(width, height){
+            function createClassic(width, height, xoff, yoff){
                 var slots = []
                 //let path = Array(4).fill([4, "R", 2, "R", 4, "L"]).flat()
                 let path = "eeeeReRNNNNNRR----NR-NN!-!-R!-R!-NNeLLReeeL"
@@ -94,8 +94,8 @@
                 console.log(npath)
                 let stepsize = 3 * Piece.r
 
-                let x = width / 2
-                let y = height / 2
+                let x = width / 2 + xoff
+                let y = height / 2 + yoff
 
                 let dx = 1
                 let dy = 0
@@ -224,7 +224,7 @@
             Piece.r = Math.min(canvas.height, canvas.width) / 45
 
             //let slots = createSlots(canvas.width, canvas.height)
-            let slots = createClassic(canvas.width, canvas.height)
+            let slots = createClassic(canvas.width, canvas.height, Piece.r * 3, -Piece.r*3)
             var current = null
 
             var dr = null
