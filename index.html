@@ -224,7 +224,7 @@
 
             //let slots = createSlots(canvas.width, canvas.height)
             let slots = createClassic(canvas.width, canvas.height, Piece.r * 3, -Piece.r*3)
-            var current = null
+            var selected = null
 
             var dr = null
 
@@ -241,52 +241,48 @@
                 console.log("down", slot)
 
                 if (slot && slot.hasPiece){
-                    current = slot
-                } /*else if (slot && e.button == 1){ // for debugging
+                    selected = slot
+                } /* else if (slot && e.button == 1){ // for debugging
                     slot.piece = new Piece(colors.red)
-                }  */
+                } */
                 dr = mousePosition(e)
             })
 
             document.addEventListener("mouseup", (e)=>{
-                if (current != null){
+                if (selected != null){
                     var new_slot = findSlot(slots, mousePosition(e))
                     console.log("up", new_slot)
 
                     if (new_slot && !(new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
-                        new_slot.piece = current.piece
-                        current.empty()
+                        new_slot.piece = selected.piece
+                        selected.empty()
                     } else if (new_slot && (new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
                         
-                        if (new_slot.piece.color == current.piece.color){
+                        if (new_slot.piece.color == selected.piece.color){
                             // do nothing
-                        } else { 
-                            function swap (cslot, hslot){
-                                if (!hslot.hasPiece){
+                        } else {
+                            function goHome (piece){
+                                if (!piece.home.hasPiece){
+                                    piece.home.piece = piece
                                     return
                                 }
 
-                                let p = hslot.piece
-                                hslot.piece = cslot.piece
-                                cslot.piece = null
+                                tmp = piece.home.piece
+                                piece.home.piece = piece
 
-                                
 
-                                if (!p.home.hasPiece){
-                                    p.home.piece = p
-                                    return
-                                }
-
-                                swap(p.home, p.home.piece.home)
+                                goHome(tmp)
                             }
-                            swap(current, new_slot)
 
-                            //new_slot.piece = current.piece
-                            //current.empty()
+                            p = new_slot.piece
+                            new_slot.piece = selected.piece
+                            goHome(p)
+
+                            selected.empty()
                         }
                     }
                 }
-                current = null
+                selected = null
                 dr = null
             })
             
@@ -309,10 +305,10 @@
                     ctx.stroke()
                     ctx.closePath()
                 }
-                if (current){
+                if (selected){
                     ctx.beginPath()
-                    ctx.fillStyle = current.piece.color[2]
-                    ctx.strokeStyle = current.piece.color[1]
+                    ctx.fillStyle = selected.piece.color[2]
+                    ctx.strokeStyle = selected.piece.color[1]
                     ctx.arc(dr[0], dr[1], Piece.r, 0, Math.PI * 2)
                     ctx.fill()
                     ctx.lineWidth = 3
