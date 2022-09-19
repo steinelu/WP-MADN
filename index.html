@@ -228,12 +228,12 @@
 
             var dr = null
 
-            function mousePosition(e){
-                // https://stackoverflow.com/questions/43853119/javascript-wrong-mouse-position-when-drawing-on-canvas
-                let bounds = canvas.getBoundingClientRect()
-                let x = e.pageX - bounds.left - scrollX
-                let y = e.pageY - bounds.top - scrollY
-                return [x, y]
+            function mousePosition(e) {
+                // https://stackoverflow.com/questions/43955925/html5-responsive-canvas-mouse-position-and-resize
+                var mouseX = e.offsetX * canvas.width / canvas.clientWidth | 0;
+                var mouseY = e.offsetY * canvas.height / canvas.clientHeight | 0;
+                //return {x: mouseX, y: mouseY};
+                return [mouseX, mouseY]
             }
 
             document.addEventListener("mousedown", (e)=>{
