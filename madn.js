@@ -44,6 +44,10 @@ class Slot {
     empty() {
         this.piece_ = null
     }
+
+    isStart(){
+        return this.start
+    }
 }
 
 class Piece {
@@ -127,7 +131,6 @@ function buildLayout(path, width, height, xoff, yoff) {
                     pop = false
                     slot.piece.home = slot
                 }
-                
         }
     }
     return slots
@@ -142,7 +145,6 @@ function createSlots(width, height) {
         let rho = 2 * Math.PI * i / n
         let x = radius * Math.sin(rho) + width / 2
         let y = radius * Math.cos(rho) + height / 2
-        //slots.push([x, y, null])
         slots.push(new Slot(x, y, colors.none))
     }
 
@@ -153,23 +155,20 @@ function createSlots(width, height) {
         let rho = 2 * Math.PI * i / n
         let x = radius * Math.sin(rho) + width / 2
         let y = radius * Math.cos(rho) + height / 2
-        //slots.push([x, y, null])
         slots.push(new Slot(x, y, colors[Object.keys(colors)[i % 4]]))
     }
     return slots
 }
 
 function drawSlots(ctx, slots) {
-    //for (let [x, y, piece] of slots){
     for (let slot of slots) {
         var [x, y] = slot.pos
         ctx.beginPath()
 
         if (slot.hasPiece) {
             ctx.fillStyle = slot.piece.color[0]
-        } else if (slot.start){
+        } else if (slot.isStart()){
             ctx.fillStyle = colors.none[2]
-            //console.log("start")
         } else {
             ctx.fillStyle = slot.color[2]
         }
@@ -258,7 +257,6 @@ Piece.r = Math.min(canvas.height, canvas.width) / 45
 
 let dice = new Dice(1, 6)
 
-//let slots = createSlots(canvas.width, canvas.height)
 let slots = buildLayout(createClassicLayout(), canvas.width, canvas.height, Piece.r * 3, -Piece.r * 3)
 
 var selected = null
@@ -268,33 +266,36 @@ function mousePosition(e) {
     // https://stackoverflow.com/questions/43955925/html5-responsive-canvas-mouse-position-and-resize
     var mouseX = e.offsetX * canvas.width / canvas.clientWidth | 0;
     var mouseY = e.offsetY * canvas.height / canvas.clientHeight | 0;
-    //return {x: mouseX, y: mouseY};
     return [mouseX, mouseY]
 }
 
 document.addEventListener("mousedown", (e) => {
     var slot = findSlot(slots, mousePosition(e))
-    //console.log("down", slot)
 
     if (slot && slot.hasPiece) {
         selected = slot
-    } /* else if (slot && e.button == 1){ // for debugging
-                    slot.piece = new Piece(colors.red)
-                } */
+    }
     dr = mousePosition(e)
 })
 
 document.addEventListener("mouseup", (e) => {
     if (selected != null) {
         var new_slot = findSlot(slots, mousePosition(e))
-        //console.log("up", new_slot)
-
-        if (new_slot && !(new_slot.hasPiece)) {// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
-            new_slot.piece = selected.piece
-            selected.empty()
-        } else if (new_slot && (new_slot.hasPiece)) {// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
+        if (new_slot && !(new_slot.hasPiece)) {
+            if (new_slot.isStart()){
+                new_slot.piece = selected.piece
+                selected.empty()
+            } else {
+                if ((new_slot.color == selected.piece.color) || (new_slot.color == colors.none)){
+                    new_slot.piece = selected.piece
+                    selected.empty()
+                }
+            }
+        } else if (new_slot && (new_slot.hasPiece)) {
 
             if (new_slot.piece.color == selected.piece.color) {
+                // do nothing
+            } else if (new_slot.color != colors.none && new_slot.color != selected.color && !new_slot.isStart()){
                 // do nothing
             } else {
                 function goHome(piece) {
@@ -328,9 +329,6 @@ document.addEventListener("mousemove", (e) => {
 })
 
 
-
-
-
 let enter_pressed = false
 let space_pressed = false
 
@@ -348,10 +346,8 @@ document.addEventListener("keyup", (e) => {
 })
 
 document.addEventListener("keydown", (e) => {
-    //console.log("keydown")
     if (e.code == "Enter") {
         if (!enter_pressed) {
-            //console.log("enter down")
             dice.opacity = 0.5
         }
         enter_pressed = true
@@ -360,7 +356,6 @@ document.addEventListener("keydown", (e) => {
 
     if (e.code == "Space") {
         if (!space_pressed) {
-            //console.log("space down")
             dice.opacity = 0.5
         }
         space_pressed = true
@@ -369,7 +364,7 @@ document.addEventListener("keydown", (e) => {
 })
 
 
-function drawDraggingPiece(tx, dragged){
+function drawDraggingPiece(ctx, dragged){
     ctx.beginPath()
     ctx.strokeStyle = "#999999"
     ctx.arc(dragged[0], dragged[1], 10, 0, Math.PI * 2)
