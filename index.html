@@ -220,6 +220,7 @@
                     this.from = from
                     this.to = to
                     this.opacity = 1.0
+                    this.rn = "-"
                 }
 
                 roll(){
@@ -228,9 +229,6 @@
                 }
 
                 get number(){
-                    if (this.rn === undefined){
-                        this.roll()
-                    }
                     return this.rn
                 }
 
