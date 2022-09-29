@@ -10,14 +10,14 @@ const colors = {
 }
 
 class Slot {
-    constructor(x, y, c) {
+    constructor(x, y, c, s) {
         this.position = [x, y]
         this.piece_ = null
         this.color_ = c
+        this.start = s
     }
 
     get color() {
-        4
         return this.color_
     }
 
@@ -59,23 +59,16 @@ class Piece {
 }
 
 function createClassicLayout(){
-    
-    //let path = Array(4).fill([4, "R", 2, "R", 4, "L"]).flat()
-    let path = "eeeeReRNNNNNRR----NR-NN!-!-R!-R!-NNeLLReeeL"
-
+    let path = "eeeeReRNNNNNRR----NR*-NN!-!-R!-R!-NNeLLReeeL"
     // https://stackoverflow.com/questions/22015684/how-do-i-zip-two-arrays-in-javascript
     const zip = (a, b) => a.map((k, i) => [k, b[i]])
-
     let cpath = Array(4).fill(path)
     let colors_path = "brga".split("")
-
-    //let npath = zip(cpath, colors_path).map((z)=>z[0].replace("_", z[1]))
     let npath = zip(cpath, colors_path).map((z) => z[0].replaceAll('-', z[1])).join('')
-
     return npath
 }
 
-function buildLayout(npath, width, height, xoff, yoff) {
+function buildLayout(path, width, height, xoff, yoff) {
     var slots = []
     let stepsize = 3 * Piece.r
     let x = width / 2 + xoff
@@ -85,20 +78,22 @@ function buildLayout(npath, width, height, xoff, yoff) {
     let dy = 0
 
     let current_color = colors.none
+    let pop = false // populate
+    let start = false
 
-    let pop = false
-
-    for (let cmd of npath) {
+    for (let cmd of path) {
         switch (cmd) {
             case "R": // turn right
                 [dx, dy] = [-dy, dx]
                 break
             case "L": // turn left
-
                 [dx, dy] = [dy, -dx]
                 break
             case "!":
                 pop = true
+                break
+            case "*":
+                start = true
                 break
             default:
                 x += dx * stepsize
@@ -122,7 +117,9 @@ function buildLayout(npath, width, height, xoff, yoff) {
                     case "N":
                         continue
                 }
-                let slot = new Slot(x, y, current_color)
+
+                let slot = new Slot(x, y, current_color, start)
+                start = false
                 slots.push(slot)
 
                 if (pop) {
@@ -130,6 +127,7 @@ function buildLayout(npath, width, height, xoff, yoff) {
                     pop = false
                     slot.piece.home = slot
                 }
+                
         }
     }
     return slots
@@ -169,6 +167,9 @@ function drawSlots(ctx, slots) {
 
         if (slot.hasPiece) {
             ctx.fillStyle = slot.piece.color[0]
+        } else if (slot.start){
+            ctx.fillStyle = colors.none[2]
+            //console.log("start")
         } else {
             ctx.fillStyle = slot.color[2]
         }
@@ -198,6 +199,9 @@ function findSlot(slots, pos) {
     }
     return null
 }
+
+
+
 
 class Dice {
     constructor(from, to) {
@@ -253,13 +257,11 @@ ctx.canvas.height = window.innerHeight;
 Piece.r = Math.min(canvas.height, canvas.width) / 45
 
 let dice = new Dice(1, 6)
-//let dice_opacity = 0
-
 
 //let slots = createSlots(canvas.width, canvas.height)
 let slots = buildLayout(createClassicLayout(), canvas.width, canvas.height, Piece.r * 3, -Piece.r * 3)
-var selected = null
 
+var selected = null
 var dr = null
 
 function mousePosition(e) {
@@ -326,6 +328,9 @@ document.addEventListener("mousemove", (e) => {
 })
 
 
+
+
+
 let enter_pressed = false
 let space_pressed = false
 
@@ -364,27 +369,35 @@ document.addEventListener("keydown", (e) => {
 })
 
 
+function drawDraggingPiece(tx, dragged){
+    ctx.beginPath()
+    ctx.strokeStyle = "#999999"
+    ctx.arc(dragged[0], dragged[1], 10, 0, Math.PI * 2)
+    ctx.lineWidth = 1
+    ctx.stroke()
+    ctx.closePath()
+}
+
+function drawSelectedPiece(ctx,  piece){
+    ctx.beginPath()
+    ctx.fillStyle = piece.color[2]
+    ctx.strokeStyle = piece.color[1]
+    ctx.arc(dr[0], dr[1], Piece.r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.lineWidth = 3
+    ctx.stroke()
+    ctx.closePath()
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     drawSlots(ctx, slots)
 
     if (dr) {
-        ctx.beginPath()
-        ctx.strokeStyle = "#999999"
-        ctx.arc(dr[0], dr[1], 10, 0, Math.PI * 2)
-        ctx.lineWidth = 1
-        ctx.stroke()
-        ctx.closePath()
+        drawDraggingPiece(ctx, dr)
     }
     if (selected) {
-        ctx.beginPath()
-        ctx.fillStyle = selected.piece.color[2]
-        ctx.strokeStyle = selected.piece.color[1]
-        ctx.arc(dr[0], dr[1], Piece.r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.lineWidth = 3
-        ctx.stroke()
-        ctx.closePath()
+        drawSelectedPiece(ctx, selected.piece)
     }
     drawDice(ctx, dice)
     requestAnimationFrame(draw)
