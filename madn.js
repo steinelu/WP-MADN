@@ -4,7 +4,8 @@ const colors = {
     blue: ["#0052cc", "#003380", "#99c2ff"],
     red: ["#b30000", "#800000", "#ff9999"],
     green: ["#00e64d", "#00802b", "#80ffaa"],
-    black: ["#595959", "#404040", "#cccccc"],
+    //black: ["#595959", "#404040", "#cccccc"],
+    black:["#944dff", "#6600ff", "#d1b3ff"],
     none: ["", "#1a1a1a", "#e6e6e6"]
 }
 
@@ -241,7 +242,6 @@ function drawDice(ctx, dice) {
 
     ctx.closePath()
 }
-
 
 
 
