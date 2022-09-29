@@ -215,12 +215,62 @@
                 return null
             }
 
+            class Dice{
+                constructor(from, to){
+                    this.from = from
+                    this.to = to
+                    this.opacity = 1.0
+                }
+
+                roll(){
+                    this.rn = Math.floor(Math.random() * this.to) + this.from
+                    console.log(this.rn)
+                }
+
+                get number(){
+                    if (this.rn === undefined){
+                        this.roll()
+                    }
+                    return this.rn
+                }
+
+                opacity_reset(){
+                    this.opacity = 0.0
+                }
+
+                opacity_inc(){
+                    if (this.opacity < 1)
+                        this.opacity += 0.1
+                }
+            }
+
+            function drawDice(ctx, dice) {
+                w = ctx.canvas.width
+                h = ctx.canvas.height
+                n = dice.number
+
+                ctx.beginPath()
+                ctx.fillStyle = 'black';
+                ctx.font = 2* Piece.r + 'px serif';
+                ctx.fillText(n, w/2-12, h/2 +12)
+
+                ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity+ ")"
+                ctx.rect(w/2-23, h/2-23, 46, 46)
+                ctx.fill()
+
+                ctx.closePath()
+            }
+
             const canvas = document.getElementById("gameCanvas");
             const ctx = canvas.getContext("2d");
 
             ctx.canvas.width  = window.innerWidth;
             ctx.canvas.height = window.innerHeight;
             Piece.r = Math.min(canvas.height, canvas.width) / 45
+
+            let dice = new Dice(1,6)
+            //let dice_opacity = 0
+
 
             //let slots = createSlots(canvas.width, canvas.height)
             let slots = createClassic(canvas.width, canvas.height, Piece.r * 3, -Piece.r*3)
@@ -238,7 +288,7 @@
 
             document.addEventListener("mousedown", (e)=>{
                 var slot = findSlot(slots, mousePosition(e))
-                console.log("down", slot)
+                //console.log("down", slot)
 
                 if (slot && slot.hasPiece){
                     selected = slot
@@ -251,7 +301,7 @@
             document.addEventListener("mouseup", (e)=>{
                 if (selected != null){
                     var new_slot = findSlot(slots, mousePosition(e))
-                    console.log("up", new_slot)
+                    //console.log("up", new_slot)
 
                     if (new_slot && !(new_slot.hasPiece)){// && (new_slot.color == current.piece.color || new_slot.color == colors.none)){
                         new_slot.piece = selected.piece
@@ -269,7 +319,6 @@
 
                                 tmp = piece.home.piece
                                 piece.home.piece = piece
-
 
                                 goHome(tmp)
                             }
@@ -289,6 +338,44 @@
             document.addEventListener("mousemove", (e)=>{
                 if (dr != null){
                     dr = mousePosition(e)
+                }
+            })
+
+
+            let enter_pressed = false
+            let space_pressed = false
+
+            document.addEventListener("keyup",(e)=>{
+                if (e.code == "Space"){
+                    space_pressed = false
+                    dice.roll()
+                    dice.opacity_reset()
+                }
+                if(e.code == "Enter"){
+                    enter_pressed = false
+                    dice.roll()
+                    dice.opacity_reset()
+                }
+            })
+
+            document.addEventListener("keydown",(e)=>{
+                //console.log("keydown")
+                if (e.code == "Enter"){
+                    if (!enter_pressed){
+                        //console.log("enter down")
+                        dice.opacity = 0.5
+                    }
+                    enter_pressed = true
+                    dice.opacity_inc()
+                }
+
+                if (e.code == "Space"){
+                    if (!space_pressed){
+                        //console.log("space down")
+                        dice.opacity = 0.5
+                    }
+                    space_pressed = true
+                    dice.opacity_inc()
                 }
             })
 
@@ -315,7 +402,7 @@
                     ctx.stroke()
                     ctx.closePath()
                 }
-                
+                drawDice(ctx, dice)
                 requestAnimationFrame(draw)
             }
             draw();
