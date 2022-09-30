@@ -259,7 +259,7 @@ let slots = buildLayout(createClassicLayout(), canvas.width, canvas.height, Piec
 
 let origin_slot = null
 let dr = null
-
+let select = false
 
 
 function intersectsDice(w, h, pos){
@@ -291,8 +291,9 @@ document.addEventListener("mousedown", (e) => {
 
     var slot = findSlot(slots, pos)
 
-    if (slot && slot.hasPiece) {
+    if (!select && slot && slot.hasPiece) {
         origin_slot = slot
+        select = true
     }
     dr = mousePosition(e)
 })
@@ -306,8 +307,10 @@ document.addEventListener("mouseup", (e) => {
 
     if (origin_slot != null) {
         var new_slot = findSlot(slots, mousePosition(e))
-        if (new_slot == origin_slot){
+        if (select && new_slot == origin_slot){
             return
+        } else if (select){
+            select = false
         }
         if (new_slot && !(new_slot.hasPiece)) {
             if (new_slot.isStart()){
