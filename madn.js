@@ -207,12 +207,15 @@ class Dice {
         this.to = to
         this.opacity = 0.0
         this.rn = "-"
+
+        this.cnt = 0
     }
 
     roll() {
         this.rn = Math.floor(Math.random() * this.to) + this.from
         console.log(this.rn)
         this.opacity_reset()
+        this.cnt = 10
     }
 
     get number() {
@@ -221,6 +224,10 @@ class Dice {
 
     opacity_reset() {
         this.opacity = 1.0
+    }
+
+    dec(){
+        this.cnt -= 1
     }
 }
 
@@ -231,18 +238,19 @@ function drawDice(ctx, dice) {
     r = Piece.r
 
     ctx.beginPath()
-    //ctx.fillStyle = 'black';
     ctx.fillStyle = "rgba(0, 0, 0," + dice.opacity + ")"
     ctx.font = 2 * r + 'px serif';
     ctx.fillText(n, w / 2 - (r/2), h / 2 + (r/2))
 
-    //ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
-    //ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
-    //ctx.fill()
+    if(dice.cnt > 0){
+        ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
+        ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
+        ctx.fill()
+        dice.dec()
+    }
 
     ctx.closePath()
 }
-
 
 
 const canvas = document.getElementById("gameCanvas");
