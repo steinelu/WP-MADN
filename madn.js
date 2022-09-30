@@ -243,7 +243,7 @@ function drawDice(ctx, dice) {
     ctx.fillText(n, w / 2 - (r/2), h / 2 + (r/2))
 
     if(dice.cnt > 0){
-        ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
+        ctx.fillStyle = "rgba(241, 241, 241, 1)"
         ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
         ctx.fill()
         dice.dec()
