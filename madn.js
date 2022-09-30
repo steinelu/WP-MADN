@@ -1,4 +1,3 @@
-
 const colors = {
     // (piecefill, boarder, emptyfill)
     blue: ["#0052cc", "#003380", "#99c2ff"],
@@ -258,8 +257,10 @@ let dice_pressed = false
 
 let slots = buildLayout(createClassicLayout(), canvas.width, canvas.height, Piece.r * 3, -Piece.r * 3)
 
-var selected = null
-var dr = null
+let origin_slot = null
+let dr = null
+
+
 
 function intersectsDice(w, h, pos){
     r = Piece.r
@@ -291,7 +292,7 @@ document.addEventListener("mousedown", (e) => {
     var slot = findSlot(slots, pos)
 
     if (slot && slot.hasPiece) {
-        selected = slot
+        origin_slot = slot
     }
     dr = mousePosition(e)
 })
@@ -301,25 +302,28 @@ document.addEventListener("mouseup", (e) => {
         dice_pressed = false
         dice.opacity_reset()
         dice.roll()
-    } 
+    }
 
-    if (selected != null) {
+    if (origin_slot != null) {
         var new_slot = findSlot(slots, mousePosition(e))
+        if (new_slot == origin_slot){
+            return
+        }
         if (new_slot && !(new_slot.hasPiece)) {
             if (new_slot.isStart()){
-                new_slot.piece = selected.piece
-                selected.empty()
+                new_slot.piece = origin_slot.piece
+                origin_slot.empty()
             } else {
-                if ((new_slot.color == selected.piece.color) || (new_slot.color == colors.none)){
-                    new_slot.piece = selected.piece
-                    selected.empty()
+                if ((new_slot.color == origin_slot.piece.color) || (new_slot.color == colors.none)){
+                    new_slot.piece = origin_slot.piece
+                    origin_slot.empty()
                 }
             }
         } else if (new_slot && (new_slot.hasPiece)) {
 
-            if (new_slot.piece.color == selected.piece.color) {
+            if (new_slot.piece.color == origin_slot.piece.color) {
                 // do nothing
-            } else if (new_slot.color != colors.none && new_slot.color != selected.color && !new_slot.isStart()){
+            } else if (new_slot.color != colors.none && new_slot.color != origin_slot.color && !new_slot.isStart()){
                 // do nothing
             } else {
                 function goHome(piece) {
@@ -335,14 +339,14 @@ document.addEventListener("mouseup", (e) => {
                 }
 
                 p = new_slot.piece
-                new_slot.piece = selected.piece
+                new_slot.piece = origin_slot.piece
                 goHome(p)
 
-                selected.empty()
+                origin_slot.empty()
             }
         }
     }
-    selected = null
+    origin_slot = null
     dr = null
 })
 
@@ -413,8 +417,8 @@ function draw() {
     if (dr) {
         drawDraggingPiece(ctx, dr)
     }
-    if (selected) {
-        drawSelectedPiece(ctx, selected.piece)
+    if (origin_slot) {
+        drawSelectedPiece(ctx, origin_slot.piece)
     }
     drawDice(ctx, dice)
     requestAnimationFrame(draw)
