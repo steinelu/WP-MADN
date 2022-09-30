@@ -206,13 +206,14 @@ class Dice {
     constructor(from, to) {
         this.from = from
         this.to = to
-        this.opacity = 1.0
+        this.opacity = 0.0
         this.rn = "-"
     }
 
     roll() {
         this.rn = Math.floor(Math.random() * this.to) + this.from
         console.log(this.rn)
+        this.opacity_reset()
     }
 
     get number() {
@@ -220,12 +221,7 @@ class Dice {
     }
 
     opacity_reset() {
-        this.opacity = 0.0
-    }
-
-    opacity_inc() {
-        if (this.opacity < 1)
-            this.opacity += 0.1
+        this.opacity = 1.0
     }
 }
 
@@ -236,13 +232,14 @@ function drawDice(ctx, dice) {
     r = Piece.r
 
     ctx.beginPath()
-    ctx.fillStyle = 'black';
+    //ctx.fillStyle = 'black';
+    ctx.fillStyle = "rgba(0, 0, 0," + dice.opacity + ")"
     ctx.font = 2 * r + 'px serif';
     ctx.fillText(n, w / 2 - (r/2), h / 2 + (r/2))
 
-    ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
-    ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
-    ctx.fill()
+    //ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
+    //ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
+    //ctx.fill()
 
     ctx.closePath()
 }
@@ -257,11 +254,23 @@ ctx.canvas.height = window.innerHeight;
 Piece.r = Math.min(canvas.height, canvas.width) / 45
 
 let dice = new Dice(1, 6)
+let dice_pressed = false
 
 let slots = buildLayout(createClassicLayout(), canvas.width, canvas.height, Piece.r * 3, -Piece.r * 3)
 
 var selected = null
 var dr = null
+
+function intersectsDice(w, h, pos){
+    r = Piece.r
+    let x_ = w/2
+    let y_ = h/2
+
+    if (pos[0] > x_ - r && pos[0] < x_ + r && pos[1] > y_ -r && pos[1] < y_ + r){
+        return true
+    }
+    return false
+}
 
 function mousePosition(e) {
     // https://stackoverflow.com/questions/43955925/html5-responsive-canvas-mouse-position-and-resize
@@ -271,7 +280,15 @@ function mousePosition(e) {
 }
 
 document.addEventListener("mousedown", (e) => {
-    var slot = findSlot(slots, mousePosition(e))
+    let pos = mousePosition(e)
+    if (intersectsDice(ctx.canvas.width, ctx.canvas.height, pos)){
+        if (!dice_pressed){
+            dice.opacity = 0.5
+            dice_pressed = true
+        } 
+    }
+
+    var slot = findSlot(slots, pos)
 
     if (slot && slot.hasPiece) {
         selected = slot
@@ -280,6 +297,12 @@ document.addEventListener("mousedown", (e) => {
 })
 
 document.addEventListener("mouseup", (e) => {
+    if (dice_pressed){
+        dice_pressed = false
+        dice.opacity_reset()
+        dice.roll()
+    } 
+
     if (selected != null) {
         var new_slot = findSlot(slots, mousePosition(e))
         if (new_slot && !(new_slot.hasPiece)) {
@@ -337,12 +360,10 @@ document.addEventListener("keyup", (e) => {
     if (e.code == "Space") {
         space_pressed = false
         dice.roll()
-        dice.opacity_reset()
     }
     if (e.code == "Enter") {
         enter_pressed = false
         dice.roll()
-        dice.opacity_reset()
     }
 })
 
@@ -352,7 +373,7 @@ document.addEventListener("keydown", (e) => {
             dice.opacity = 0.5
         }
         enter_pressed = true
-        dice.opacity_inc()
+        //dice.opacity_inc()
     }
 
     if (e.code == "Space") {
@@ -360,7 +381,7 @@ document.addEventListener("keydown", (e) => {
             dice.opacity = 0.5
         }
         space_pressed = true
-        dice.opacity_inc()
+        //dice.opacity_inc()
     }
 })
 
