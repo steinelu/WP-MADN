@@ -233,14 +233,15 @@ function drawDice(ctx, dice) {
     w = ctx.canvas.width
     h = ctx.canvas.height
     n = dice.number
+    r = Piece.r
 
     ctx.beginPath()
     ctx.fillStyle = 'black';
-    ctx.font = 2 * Piece.r + 'px serif';
-    ctx.fillText(n, w / 2 - 12, h / 2 + 12)
+    ctx.font = 2 * r + 'px serif';
+    ctx.fillText(n, w / 2 - (r/2), h / 2 + (r/2))
 
     ctx.fillStyle = "rgba(241, 241, 241," + dice.opacity + ")"
-    ctx.rect(w / 2 - 23, h / 2 - 23, 46, 46)
+    ctx.rect(w / 2 - r, h / 2 - r, r*2, r*2)
     ctx.fill()
 
     ctx.closePath()
